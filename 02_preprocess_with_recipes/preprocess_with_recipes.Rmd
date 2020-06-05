@@ -1,0 +1,270 @@
+---
+title: "Preprocess your data with recipes"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(tibble.print_min = 5)
+```
+
+`r shiny::icon('map-signs')` Get started with building a model in this R Markdown document that accompanies [Preprocess your data with recipes](https://www.tidymodels.org/start/recipes) tidymodels start article.
+
+`r shiny::icon('map')` If you ever get lost, you can click on the header of the knitted document to see the accompanying section in the online article.
+
+`r shiny::icon('gear')` Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
+
+
+## [Introduction](https://www.tidymodels.org/start/recipes/#intro)
+
+Load necessary packages:
+
+```{r}
+library(tidymodels)      # for the recipes package, along with the rest of tidymodels
+
+# Helper packages
+library(nycflights13)    # for flight data
+library(skimr)           # for variable summaries
+```
+
+Load and wrangle data:
+
+```{r}
+set.seed(123)
+
+flight_data <- 
+  flights %>% 
+  mutate(
+    # Convert the arrival delay to a factor
+    arr_delay = ifelse(arr_delay >= 30, "late", "on_time"),
+    arr_delay = factor(arr_delay),
+    # We will use the date (not date-time) in the recipe below
+    date = as.Date(time_hour)
+  ) %>% 
+  # Include the weather data
+  inner_join(weather, by = c("origin", "time_hour")) %>% 
+  # Only retain the specific columns we will use
+  select(dep_time, flight, origin, dest, air_time, distance, 
+         carrier, date, arr_delay, time_hour) %>% 
+  # Exclude missing data
+  na.omit() %>% 
+  # For creating models, it is better to have qualitative columns
+  # encoded as factors (instead of character strings)
+  mutate_if(is.character, as.factor)
+```
+
+Check the number of delayed flights:
+
+```{r}
+flight_data %>% 
+  count(arr_delay) %>% 
+  mutate(prop = n/sum(n))
+```
+
+Take a look at data types and data points:
+
+```{r}
+glimpse(flight_data)
+```
+
+Summarise the dataset:
+
+```{r}
+flight_data %>% 
+  skimr::skim(dest, carrier) 
+```
+
+## [Data splitting](https://www.tidymodels.org/start/recipes/#data-split)
+
+Create training and test sets:
+
+```{r}
+# Fix the random numbers by setting the seed 
+# This enables the analysis to be reproducible when random numbers are used 
+set.seed(555)
+# Put 3/4 of the data into the training set 
+data_split <- initial_split(flight_data, prop = 3/4)
+
+# Create data frames for the two sets:
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+```
+
+Try typing `?initial_split` in the console to get more details about the splitting function from `rsample` package.
+
+## [Create recipe and roles](https://www.tidymodels.org/start/recipes/#recipe)
+
+Let's initiate a new recipe: 
+
+```{r}
+flights_rec <- 
+  recipe(arr_delay ~ ., data = train_data) 
+```
+
+You can see more details about how to create **recipes** by typing `?recipe` in the console. 
+
+
+Update variable roles of a recipe with `update_role`:
+
+```{r}
+flights_rec <- 
+  recipe(arr_delay ~ ., data = train_data) %>% 
+  update_role(flight, time_hour, new_role = "ID") 
+```
+
+You can also read more about adding/updating/removing roles with `?roles`.
+
+
+To get the current set of variables and roles, use the `summary()` function: 
+
+```{r}
+summary(flights_rec)
+```
+
+
+## [Create features](https://www.tidymodels.org/start/recipes/#features)
+
+What happens if we transform `date` column to `numeric`?
+
+```{r}
+flight_data %>% 
+  distinct(date) %>% 
+  mutate(numeric_date = as.numeric(date)) 
+```
+
+From `date` we can derive more meaningful features such as: 
+
+* the day of the week,
+* the month, and
+* whether or not the date corresponds to a holiday. 
+
+Add **steps** to your recipe to generate these features:
+
+```{r}
+flights_rec <- 
+  recipe(arr_delay ~ ., data = train_data) %>% 
+  update_role(flight, time_hour, new_role = "ID") %>% 
+  step_date(date, features = c("dow", "month")) %>%               
+  step_holiday(date, holidays = timeDate::listHolidays("US")) %>% 
+  step_rm(date)
+```
+
+Check out help documents for these step functions with `?step_date`, `?step_holiday`, `?step_rm`.
+
+Create dummy variables using `step_dummy()`: 
+
+```{r}
+flights_rec <- 
+  recipe(arr_delay ~ ., data = train_data) %>% 
+  update_role(flight, time_hour, new_role = "ID") %>% 
+  step_date(date, features = c("dow", "month")) %>% 
+  step_holiday(date, holidays = timeDate::listHolidays("US")) %>% 
+  step_rm(date) %>% 
+  step_dummy(all_nominal(), -all_outcomes())
+```
+
+Check if some destinations present in test set are not included in the training set:
+
+```{r}
+test_data %>% 
+  distinct(dest) %>% 
+  anti_join(train_data)
+```
+
+Remove variables that contain only a single value with `step_zv()`:
+ 
+```{r}
+flights_rec <- 
+  recipe(arr_delay ~ ., data = train_data) %>% 
+  update_role(flight, time_hour, new_role = "ID") %>% 
+  step_date(date, features = c("dow", "month")) %>% 
+  step_holiday(date, holidays = timeDate::listHolidays("US")) %>% 
+  step_rm(date) %>% 
+  step_dummy(all_nominal(), -all_outcomes()) %>% 
+  step_zv(all_predictors())
+```
+ 
+
+## [Fit a model with a recipe](https://www.tidymodels.org/start/recipes/#fit-workflow)
+ 
+ Recall the [Build a model](https://www.tidymodels.org/start/models/) article.
+ 
+ This time we build a model specification for logistic regression using `glm` engine:
+ 
+```{r}
+lr_mod <- 
+  logistic_reg() %>% 
+  set_engine("glm")
+```
+ 
+For more details try typing `?set_engine` and `?glm` in the console.
+
+Bundle the model specification (`lr_mod`) with the recipe (`flights_rec`) to create a *model workflow*:
+
+```{r}
+flights_wflow <- 
+  workflow() %>% 
+  add_model(lr_mod) %>% 
+  add_recipe(flights_rec)
+flights_wflow
+```
+
+Prepare the recipe and train the model:
+
+```{r}
+flights_fit <- 
+  flights_wflow %>% 
+  fit(data = train_data)
+```
+
+Pull the fitted model object then use the `broom::tidy()` function to get a tidy tibble of model coefficients:
+
+```{r}
+flights_fit %>% 
+  pull_workflow_fit() %>% 
+  tidy()
+```
+
+## [Use a trained workflow to predict](https://www.tidymodels.org/start/recipes/#predict-workflow)
+
+Simply apply fitted model to `test_data` and predict outcomes.
+
+```{r}
+predict(flights_fit, test_data)
+```
+
+Get predicted class probabilities and bind them with some variables from the test data:
+
+```{r}
+flights_pred <- 
+  predict(flights_fit, test_data, type = "prob") %>% 
+  bind_cols(test_data %>% select(arr_delay, time_hour, flight)) 
+
+# The data look like: 
+flights_pred
+```
+
+Let's look at model performance with ROC curve (`roc_curve()`) and plot by piping it to the `autoplot()`.
+
+```{r}
+flights_pred %>% 
+  roc_curve(truth = arr_delay, .pred_late) %>% 
+  autoplot()
+```
+
+Similarly, `roc_auc()` estimates the area under the curve: 
+
+```{r}
+flights_pred %>% 
+  roc_auc(truth = arr_delay, .pred_late)
+```
+
+Not too bad! 
+
+Now it's your turn to test out this workflow [*without*](https://tidymodels.github.io/workflows/reference/add_formula.html) this recipe! 
+
+Remember the [Build a model](https://www.tidymodels.org/start/models/) article, we did not use a recipe but used a **formula** instead.
+
+You can use `workflows::add_formula(arr_delay ~ .)` instead of `add_recipe()` (remember to remove the identification variables first!), and see whether our recipe improved our model's ability to predict late arrivals.

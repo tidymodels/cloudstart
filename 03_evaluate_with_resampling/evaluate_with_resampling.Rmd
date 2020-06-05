@@ -1,0 +1,189 @@
+---
+title: "Evaluate your model with resampling"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(tibble.print_min = 5)
+```
+
+`r shiny::icon('map-signs')` Get started with building a model in this R Markdown document that accompanies [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling) tidymodels start article.
+
+`r shiny::icon('map')` If you ever get lost, you can click on the header of the knitted document to see the accompanying section in the online article.
+
+`r shiny::icon('gear')` Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
+
+## [Introduction](https://www.tidymodels.org/start/resampling/#intro)
+
+Load necessary packages:
+
+```{r}
+library(tidymodels) # for the rsample package, along with the rest of tidymodels
+
+# Helper packages
+library(modeldata)  # for the cells data
+```
+
+## [The cell image data](https://www.tidymodels.org/start/resampling/#data)
+
+Load cell image data (it has a lot of columns!):
+
+```{r}
+data(cells, package = "modeldata")
+cells
+```
+
+Look at proportion of classes:
+
+```{r}
+cells %>% 
+  count(class) %>% 
+  mutate(prop = n/sum(n))
+```
+
+
+## [Data splitting](https://www.tidymodels.org/start/resampling/#data-split)
+
+Define a split object stratified by `class` column:
+
+```{r}
+set.seed(123)
+cell_split <- initial_split(cells %>% select(-case), 
+                            strata = class)
+```
+
+Apply the split to obtain training (`cell_train`) and test (`cell_test`) sets.
+
+```{r}
+cell_train <- training(cell_split)
+cell_test  <- testing(cell_split)
+
+nrow(cell_train)
+nrow(cell_train)/nrow(cells)
+
+# training set proportions by class
+cell_train %>% 
+  count(class) %>% 
+  mutate(prop = n/sum(n))
+
+# test set proportions by class
+cell_test %>% 
+  count(class) %>% 
+  mutate(prop = n/sum(n))
+```
+
+We will work with the training set data for the majority of the modeling steps.
+
+## [Modeling](https://www.tidymodels.org/start/resampling/#modeling)
+
+This time we don't need to preprocess the data as much, therefore we will not use a **recipe**.
+Let's create the model specification for a random forest model, using `ranger` engine and set mode to `classification`.
+
+```{r}
+rf_mod <- 
+  rand_forest(trees = 1000) %>% 
+  set_engine("ranger") %>% 
+  set_mode("classification")
+```
+
+See `?rand_forest` for possibile engines, modes and further details.   
+
+Now let's fit the model on our training dataset using the *formula*:
+
+```{r}
+set.seed(234)
+rf_fit <- 
+  rf_mod %>% 
+  fit(class ~ ., data = cell_train)
+rf_fit
+```
+
+## [Estimating performance](https://www.tidymodels.org/start/resampling/#performance)
+
+What happens if we evaluate model performance with the training data?
+
+Predict the same fitted model with training dataset:
+
+```{r}
+rf_training_pred <- 
+  predict(rf_fit, cell_train) %>% 
+  bind_cols(predict(rf_fit, cell_train, type = "prob")) %>% 
+  # Add the true outcome data back in
+  bind_cols(cell_train %>% 
+              select(class))
+```
+
+Look at the performance results:
+
+```{r}
+rf_training_pred %>%                # training set predictions
+  roc_auc(truth = class, .pred_PS)
+rf_training_pred %>%                # training set predictions
+  accuracy(truth = class, .pred_class)
+```
+
+Now proceed to the test set:
+
+```{r}
+rf_testing_pred <- 
+  predict(rf_fit, cell_test) %>% 
+  bind_cols(predict(rf_fit, cell_test, type = "prob")) %>% 
+  bind_cols(cell_test %>% select(class))
+```
+
+And look at performance results from prediction with the test set:
+
+```{r}
+rf_testing_pred %>%                   # test set predictions
+  roc_auc(truth = class, .pred_PS)
+rf_testing_pred %>%                   # test set predictions
+  accuracy(truth = class, .pred_class)
+```
+
+Whoops! Our performance results with the training set were a little too good to be true!
+
+## [Fit a model with resampling](https://www.tidymodels.org/start/resampling/#fit-resamples)
+
+Create cross-validation (CV) folds (for 10-fold CV) using `vfold_cv()` from the **rsample** package:
+
+```{r}
+set.seed(345)
+folds <- vfold_cv(cell_train, v = 10)
+folds
+```
+
+Do you recall working with `workflow()` from the second article, [Preprocess your data with recipes](https://www.tidymodels.org/start/recipes)?
+
+Use a `workflow()` that bundles together the random forest model and a formula.
+
+```{r}
+rf_wf <- 
+  workflow() %>%
+  add_model(rf_mod) %>%
+  add_formula(class ~ .)
+```
+
+Now apply the workflow and fit the model with each fold:
+
+```{r}
+set.seed(456)
+rf_fit_rs <- 
+  rf_wf %>% 
+  fit_resamples(folds)
+
+rf_fit_rs
+```
+
+Do you see the added columns `.metrics` and `.notes`?
+
+Collect and summarize performance metrics from all 10 folds:
+
+```{r}
+collect_metrics(rf_fit_rs)
+```
+
+Now these are more realistic results!
+

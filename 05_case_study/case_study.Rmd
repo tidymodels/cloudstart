@@ -1,0 +1,379 @@
+---
+title: "A predictive modeling case study"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(tibble.print_min = 5)
+```
+
+`r shiny::icon('map-signs')` Get started with building a model in this R Markdown document that accompanies [A predictive modeling case study](https://www.tidymodels.org/start/case-study/) tidymodels start article.
+
+`r shiny::icon('map')` If you ever get lost, you can click on the header of the knitted document to see the accompanying section in the online article.
+
+`r shiny::icon('gear')` Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
+
+
+## [Introduction](https://www.tidymodels.org/start/models/#intro)
+
+Let's put everything we learned from each of the previous [Get Started](https://www.tidymodels.org/start/) articles together and build a predictive model from beginning to end with data on hotel stays. 
+
+Load necessary packages:
+
+```{r}
+library(tidymodels)  
+
+# Helper packages
+library(readr)       # for importing data
+library(vip)         # for variable importance plots
+```
+
+## [The Hotel Bookings Data](https://www.tidymodels.org/start/case-study/#data)
+
+Let's read our hotel data into R:
+
+```{r}
+hotels <- 
+  read_csv('https://tidymodels.org/start/case-study/hotels.csv') %>%
+  mutate_if(is.character, as.factor) 
+
+dim(hotels)
+glimpse(hotels)
+```
+
+Let's look at proportions of hotel stays that include children and/or babies:
+
+```{r}
+hotels %>% 
+  count(children) %>% 
+  mutate(prop = n/sum(n))
+```
+
+
+## [A first model: penalized logistic regression](https://www.tidymodels.org/start/case-study/#first-model)
+
+ Recall [Evaluate your model with resampling](/start/resampling/#data-split) article for data splitting?
+ 
+ Let's reserve 25% of the stays to the test set:
+ 
+```{r}
+set.seed(123)
+splits      <- initial_split(hotels, strata = children)
+
+hotel_other <- training(splits)
+hotel_test  <- testing(splits)
+
+# training set proportions by children
+hotel_other %>% 
+  count(children) %>% 
+  mutate(prop = n/sum(n))
+
+# test set proportions by children
+hotel_test  %>% 
+  count(children) %>% 
+  mutate(prop = n/sum(n))
+```
+
+Now let's reserve another 20% of the `hotel_other` for our validation set.
+
+```{r}
+set.seed(234)
+val_set <- validation_split(hotel_other, 
+                            strata = children, 
+                            prop = 0.80)
+val_set
+```
+ 
+
+### Build the model
+
+Let's specify a penalized logistic regression model using the lasso method.
+Note that we define `penalty=tune()` so we can tune it in the next steps, and set `mixture=1` so we are using the lasso method. 
+
+```{r}
+lr_mod <- 
+  logistic_reg(penalty = tune(), mixture = 1) %>% 
+  set_engine("glmnet")
+```
+
+For more details try typing `?logistic_reg` on the console.
+
+### Create the recipe 
+
+Remember second article [Preprocess your data with recipes](https://www.tidymodels.org/start/recipes)?
+Let's preprocess the data by creating a recipe:
+
+```{r}
+holidays <- c("AllSouls", "AshWednesday", "ChristmasEve", "Easter", 
+              "ChristmasDay", "GoodFriday", "NewYearsDay", "PalmSunday")
+
+lr_recipe <- 
+  recipe(children ~ ., data = hotel_other) %>% 
+  step_date(arrival_date) %>% 
+  step_holiday(arrival_date, holidays = holidays) %>% 
+  step_rm(arrival_date) %>% 
+  step_dummy(all_nominal(), -all_outcomes()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_predictors())
+```
+
+### Create the workflow
+
+Let's bundle the model and recipe into a single `workflow()`:
+
+```{r}
+lr_workflow <- 
+  workflow() %>% 
+  add_model(lr_mod) %>% 
+  add_recipe(lr_recipe)
+```
+
+### Create the grid for tuning
+
+Do you recall previous article [Tune model parameters](https://www.tidymodels.org/start/tuning)?
+Let's create a grid with 30 values for the hyperparameter we would like to tune:
+
+```{r}
+lr_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30))
+
+lr_reg_grid %>% top_n(-5) # lowest penalty values
+lr_reg_grid %>% top_n(5)  # highest penalty values
+```
+
+### Train and tune the model
+
+Let's train all these logistic regression models with 30 different hyperparameter values.
+We also provide the validation set `val_set`, so model diagnostics will be available after the fit.
+
+```{r}
+lr_res <- 
+  lr_workflow %>% 
+  tune_grid(val_set,
+            grid = lr_reg_grid,
+            control = control_grid(save_pred = TRUE),
+            metrics = metric_set(roc_auc))
+
+lr_res
+```
+
+Now visualize the validation set metrics by plotting the area under the ROC curve against the range of penalty values: 
+
+```{r}
+lr_plot <- 
+  lr_res %>% 
+  collect_metrics() %>% 
+  ggplot(aes(x = penalty, y = mean)) + 
+  geom_point() + 
+  geom_line() + 
+  ylab("Area under the ROC Curve") +
+  scale_x_log10(labels = scales::label_number())
+
+lr_plot 
+```
+
+Get the best values for this hyperparameter:
+
+```{r}
+top_models <-
+  lr_res %>% 
+  show_best("roc_auc", n = 15) %>% 
+  arrange(penalty) 
+top_models
+```
+
+Let's pick candidate model 12 with a penalty value of `0.00137`:
+
+```{r}
+lr_best <- 
+  lr_res %>% 
+  collect_metrics() %>% 
+  arrange(penalty) %>% 
+  slice(12)
+lr_best
+```
+
+And visualize the validation set ROC curve:
+
+```{r}
+lr_auc <- 
+  lr_res %>% 
+  collect_predictions(parameters = lr_best) %>% 
+  roc_curve(children, .pred_children) %>% 
+  mutate(model = "Logistic Regression")
+
+autoplot(lr_auc)
+```
+
+
+## [A second model: tree-based ensemble](https://www.tidymodels.org/start/case-study/#second-model)
+
+Let's try to improve our prediction performance by using random forest model type, which we already explored in [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling/) article. 
+
+Check number of cores to work with:
+
+```{r}
+cores <- parallel::detectCores()
+cores
+```
+
+Set model specification and provide number of cores for parallelization while tuning.
+
+```{r}
+rf_mod <- 
+  rand_forest(mtry = tune(), min_n = tune(), trees = 1000) %>% 
+  set_engine("ranger", num.threads = cores) %>% 
+  set_mode("classification")
+```
+
+### Create the recipe and workflow
+
+Let's create the recipe for the model.
+
+```{r}
+rf_recipe <- 
+  recipe(children ~ ., data = hotel_other) %>% 
+  step_date(arrival_date) %>% 
+  step_holiday(arrival_date) %>% 
+  step_rm(arrival_date) 
+```
+
+Then bundle it with the model specification:
+
+```{r}
+rf_workflow <- 
+  workflow() %>% 
+  add_model(rf_mod) %>% 
+  add_recipe(rf_recipe)
+```
+
+### Train and tune the model
+
+When we set up our parsnip model, we chose two hyperparameters for tuning:
+
+```{r, message=FALSE}
+rf_mod
+
+# show what will be tuned
+rf_mod %>%    
+  parameters()  
+```
+
+We will use a space-filling design to tune, with 25 candidate models: 
+
+```{r, cache = TRUE}
+set.seed(345)
+rf_res <- 
+  rf_workflow %>% 
+  tune_grid(val_set,
+            grid = 25,
+            control = control_grid(save_pred = TRUE),
+            metrics = metric_set(roc_auc))
+```
+
+Here are our top 5 random forest models, out of the 25 candidates:
+
+```{r}
+rf_res %>% 
+  show_best(metric = "roc_auc")
+```
+
+We're already getting much better results than our penalized logistic regression!
+
+Let's plot the results:
+
+```{r}
+autoplot(rf_res)
+```
+
+Let's select the best model according to the ROC AUC metric. Our final tuning parameter values are:
+
+```{r rf-best}
+rf_best <- 
+  rf_res %>% 
+  select_best(metric = "roc_auc")
+rf_best
+```
+
+Collect predictions for the best model:
+Note that we simply provide our best model's parameter values `rf_best` to subset it from a whole list of tuned models.
+
+```{r}
+rf_res %>% 
+  collect_predictions()
+
+rf_auc <- 
+  rf_res %>% 
+  collect_predictions(parameters = rf_best) %>% 
+  roc_curve(children, .pred_children) %>% 
+  mutate(model = "Random Forest")
+```
+
+Now, we can compare the validation set ROC curves for our top penalized logistic regression model and random forest model: 
+```{r}
+bind_rows(rf_auc, lr_auc) %>% 
+  ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
+  geom_path(lwd = 1.5, alpha = 0.8) +
+  geom_abline(lty = 3) + 
+  coord_equal() + 
+  scale_color_viridis_d(option = "plasma", end = .6)
+```
+
+The random forest is uniformly better across event probability thresholds. 
+
+## [The last fit](https://www.tidymodels.org/start/case-study/#last-fit)
+
+Let's evaluate the model performance one last time with the held-out test set.
+We'll start by building our parsnip model object again from scratch with our best hyperparameter values from our random forest model:
+
+```{r, cache=TRUE}
+# the last model
+last_rf_mod <- 
+  rand_forest(mtry = 8, min_n = 7, trees = 1000) %>% 
+  set_engine("ranger", num.threads = cores, importance = "impurity") %>% 
+  set_mode("classification")
+
+# the last workflow
+last_rf_workflow <- 
+  rf_workflow %>% 
+  update_model(last_rf_mod)
+
+# the last fit
+set.seed(345)
+last_rf_fit <- 
+  last_rf_workflow %>% 
+  last_fit(splits)
+
+last_rf_fit
+```
+
+Note that we added a new argument `importance = "impurity"` to `set_engine` to get variable importance scores. To see other options, type `?ranger` in console.
+
+Now let's collect the metrics:
+
+```{r}
+last_rf_fit %>% 
+  collect_metrics()
+```
+
+Now let's `pluck` the workflow and pull out the fit and visualize the variable importance scores for the top 20 features:
+
+```{r}
+last_rf_fit %>% 
+  pluck(".workflow", 1) %>%   
+  pull_workflow_fit() %>% 
+  vip(num_features = 20)
+```
+
+Let's generate our last ROC curve to visualize:
+
+```{r}
+last_rf_fit %>% 
+  collect_predictions() %>% 
+  roc_curve(children, .pred_children) %>% 
+  autoplot()
+```
+
+Not bad!
