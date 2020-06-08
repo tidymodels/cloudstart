@@ -10,11 +10,11 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 options(tibble.print_min = 5)
 ```
 
-`r shiny::icon('map-signs')` Get started with building a model in this R Markdown document that accompanies [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling) tidymodels start article.
+Get started with building a model in this R Markdown document that accompanies [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling) tidymodels start article.
 
-`r shiny::icon('map')` If you ever get lost, you can click on the header of the knitted document to see the accompanying section in the online article.
+If you ever get lost, you can click on the header of the knitted document to see the accompanying section in the online article.
 
-`r shiny::icon('gear')` Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
+Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
 
 ## [Introduction](https://www.tidymodels.org/start/resampling/#intro)
 
