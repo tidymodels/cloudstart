@@ -191,7 +191,7 @@ flights_rec <-
  
  Recall the [Build a model](https://www.tidymodels.org/start/models/) article.
  
- This time we build a model specification for logistic regression using `glm` engine:
+ This time we build a model specification for logistic regression using the `glm` engine:
  
 ```{r}
 lr_mod <- 
