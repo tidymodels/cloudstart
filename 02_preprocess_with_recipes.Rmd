@@ -265,6 +265,6 @@ Not too bad!
 
 Now it's your turn to test out this workflow [*without*](https://tidymodels.github.io/workflows/reference/add_formula.html) this recipe! 
 
-Remember the [Build a model](https://www.tidymodels.org/start/models/) article, we did not use a recipe but used a **formula** instead.
+In the [Build a model](https://www.tidymodels.org/start/models/) article, we did not use a recipe but used a **formula** instead.
 
 You can use `workflows::add_formula(arr_delay ~ .)` instead of `add_recipe()` (remember to remove the identification variables first!), and see whether our recipe improved our model's ability to predict late arrivals.
