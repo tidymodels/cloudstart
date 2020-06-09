@@ -134,7 +134,7 @@ lr_workflow <-
 
 ### Create the grid for tuning
 
-Do you recall previous article [Tune model parameters](https://www.tidymodels.org/start/tuning)?
+We can now tune our model, similar to what is shown in the previous article [Tune model parameters](https://www.tidymodels.org/start/tuning).
 Let's create a grid with 30 values for the hyperparameter we would like to tune:
 
 ```{r}
