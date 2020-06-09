@@ -80,7 +80,7 @@ We will work with the training set data for the majority of the modeling steps.
 ## [Modeling](https://www.tidymodels.org/start/resampling/#modeling)
 
 This time we don't need to preprocess the data as much, so we will not use a **recipe**.
-Let's create the model specification for a random forest model, using `ranger` engine and set mode to `classification`.
+Let's create the model specification for a random forest model, using the `ranger` engine and setting the mode to `classification`.
 
 ```{r}
 rf_mod <- 
