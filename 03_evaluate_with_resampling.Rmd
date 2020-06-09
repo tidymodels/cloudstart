@@ -103,7 +103,7 @@ rf_fit
 
 ## [Estimating performance](https://www.tidymodels.org/start/resampling/#performance)
 
-What happens if we evaluate model performance with the training data?
+What happens if we evaluate model performance with the _training_ data?
 
 Predict the same fitted model with training dataset:
 
