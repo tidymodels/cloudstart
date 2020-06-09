@@ -147,7 +147,7 @@ lr_reg_grid %>% top_n(5)  # highest penalty values
 ### Train and tune the model
 
 Let's train all these logistic regression models with 30 different hyperparameter values.
-We also provide the validation set `val_set`, so model diagnostics will be available after the fit.
+We provide the validation set `val_set`, so model diagnostics computed on `val_set` will be available after the fit.
 
 ```{r}
 lr_res <- 
