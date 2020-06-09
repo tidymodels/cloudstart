@@ -166,7 +166,7 @@ To update the parameter table, the `tidy()` method is once again used:
 tidy(bayes_fit, intervals = TRUE)
 ```
 
-Get your predictions easily without changing the syntax:
+Get your predictions without changing the syntax you used earlier:
 
 ```{r}
 bayes_plot_data <- 
