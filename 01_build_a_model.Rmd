@@ -182,7 +182,7 @@ ggplot(bayes_plot_data, aes(x = food_regime)) +
 ```
 
 
-Don't forget about the pipe (`%>%`):
+Think about how we are using the pipe (`%>%`):
 
 + Use the pipe to pass around the _data_ in the **tidyverse**   
 + Use the pipe to pass around the _model object_ with **tidymodels**
