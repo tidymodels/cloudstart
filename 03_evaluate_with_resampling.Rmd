@@ -89,7 +89,7 @@ rf_mod <-
   set_mode("classification")
 ```
 
-See `?rand_forest` for possibile engines, modes and further details.   
+See `?rand_forest` for possibile engines, modes, and further details.   
 
 Now let's fit the model on our training dataset using the *formula*:
 
