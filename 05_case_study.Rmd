@@ -210,7 +210,7 @@ autoplot(lr_auc)
 
 ## [A second model: tree-based ensemble](https://www.tidymodels.org/start/case-study/#second-model)
 
-Let's try to improve our prediction performance by using random forest model type, which we already explored in [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling/) article. 
+Let's try to improve our prediction performance by using a random forest model (model *type*), which we also explored in the [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling/) article. 
 
 Check number of cores to work with:
 
