@@ -30,7 +30,7 @@ library(vip)         # for variable importance plots
 
 ## [The cell image data, revisited](https://www.tidymodels.org/start/tuning/#data)
 
-Do you remember the `cells` dataset from the previous article [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling)?
+Let's revisit the `cells` dataset, which we also used in the previous article [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling).
 
 Import the same `cells` dataset:
 
@@ -42,8 +42,9 @@ cells
 
 ## [Predicting image segmentation, but better](https://www.tidymodels.org/start/tuning/#why-tune)
 
-We'll try to predict well-segmented (`WS`) or poorly segmented (`PS`) cells again. (See previous article [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling)). 
-But this time we'll use a different model and put a bit more effort into improving our model performance.
+We'll try to predict well-segmented (`WS`) or poorly segmented (`PS`) cells again. (See previous article [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling)).
+
+This time we'll use a different model and put a bit more effort into improving our model performance.
 
 Again we start by splitting the data:
 
@@ -57,7 +58,7 @@ cell_test  <- testing(cell_split)
 
 ## [Tuning hyperparameters](https://www.tidymodels.org/start/tuning/#tuning)
 
-Let's start by building our model spacification with `decision_tree()` model type, while setting the engine to `rpart` and mode to `classification`. See `?decision_tree()` for possible engines and further details.
+Let's start by building our model specification with the `decision_tree()` model type, while setting the engine to `rpart` and mode to `classification`. See `?decision_tree()` for possible engines and further details.
 
 Notice how we define the decision tree hyperparameters `cost_complexity` and `tree_depth` using `tune()`. This way we are letting the model specification know that we would like to tune these hyperparameters in the next steps.
 
@@ -237,6 +238,6 @@ You can see available parsnip object arguments with:
 args(decision_tree)
 ```
 
-Which shows that the `decision_tree()` function has *another* hyperparameter `min_n` that can also be tuned!
+The `decision_tree()` function has _another_ hyperparameter `min_n` that can also be tuned.
 
-Now *you* can try to tune another decision tree model with `min_n`!
+Now _you_ can try to tune another decision tree model with `min_n`!

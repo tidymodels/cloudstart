@@ -91,7 +91,7 @@ val_set
 ### Build the model
 
 Let's specify a penalized logistic regression model using the lasso method.
-Note that we define `penalty=tune()` so we can tune it in the next steps, and set `mixture=1` so we are using the lasso method. 
+Note that we define `penalty = tune()` so we can tune it in the next steps, and since we are using lasso method, we set `mixture = 1`.
 
 ```{r}
 lr_mod <- 
@@ -103,7 +103,8 @@ For more details try typing `?logistic_reg` on the console.
 
 ### Create the recipe 
 
-Remember second article [Preprocess your data with recipes](https://www.tidymodels.org/start/recipes)?
+Remember the second article [Preprocess your data with recipes](https://www.tidymodels.org/start/recipes)?
+
 Let's preprocess the data by creating a recipe:
 
 ```{r}
