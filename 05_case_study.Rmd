@@ -349,7 +349,7 @@ last_rf_fit <-
 last_rf_fit
 ```
 
-Note that we added a new argument `importance = "impurity"` to `set_engine` to get variable importance scores. To see other options, type `?ranger` in console.
+Note that we added a new argument `importance = "impurity"` to `set_engine` to get variable importance scores. This is an optional, engine-specific argument. To see its documentation, you need to read the documentation for the underlying `ranger()` function. To see it and other options, type `?ranger` in console.
 
 Now let's collect the metrics:
 
