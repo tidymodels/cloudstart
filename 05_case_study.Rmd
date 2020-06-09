@@ -254,7 +254,7 @@ rf_workflow <-
 
 When we set up our parsnip model, we chose two hyperparameters for tuning:
 
-```{r, message=FALSE}
+```{r}
 rf_mod
 
 # show what will be tuned
@@ -264,7 +264,7 @@ rf_mod %>%
 
 We will use a space-filling design to tune, with 25 candidate models: 
 
-```{r, cache = TRUE}
+```{r}
 set.seed(345)
 rf_res <- 
   rf_workflow %>% 
@@ -329,7 +329,7 @@ The random forest is uniformly better across event probability thresholds.
 Let's evaluate the model performance one last time with the held-out test set.
 We'll start by building our parsnip model object again from scratch with our best hyperparameter values from our random forest model:
 
-```{r, cache=TRUE}
+```{r}
 # the last model
 last_rf_mod <- 
   rand_forest(mtry = 8, min_n = 7, trees = 1000) %>% 
