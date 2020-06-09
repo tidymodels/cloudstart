@@ -1,4 +1,4 @@
-# Accompanying RMarkdown documents for Tidymodels Start Tutorials
+# cloudstart: R Markdown documents for RStudio Cloud to accompany tidymodels articles
 
 Each directory contatins a `.Rmd` file that accompanies one of the five [Get Started](https://www.tidymodels.org/start/) articles on [tidymodels.org](https://www.tidymodels.org):
 
@@ -12,4 +12,3 @@ Each directory contatins a `.Rmd` file that accompanies one of the five [Get Sta
 If you ever get lost, you can click on the header of the knitted document to see the accompanying section in the online article.
 
 Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
-
