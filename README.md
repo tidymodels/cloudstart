@@ -1,4 +1,4 @@
-# cloudstart: R Markdown documents for RStudio Cloud to accompany tidymodels articles
+# cloudstart: R Markdown documents for RStudio Cloud ☁ to accompany tidymodels articles
 
 This repository contains R Markdown documents to accompany the [Get Started](https://www.tidymodels.org/start/) articles on https://www.tidymodels.org/:
 
@@ -8,12 +8,8 @@ This repository contains R Markdown documents to accompany the [Get Started](htt
 4. [Tune model parameters](https://www.tidymodels.org/start/tuning/)   
 5. [A predictive modeling case study](https://www.tidymodels.org/start/case-study/)
 
-If you ever get lost, you can go to the link provided with each section header (for example `## [Introduction](https://www.tidymodels.org/start/models/#intro)`) to see the accompanying section of the online article.
+The R Markdown documents in this repo are here to help you walk through these articles by running identical code chunks. Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute the code chunks. 
 
-These R Markdown files are here to help you walktrhough the five _Get Started_ articles by running the identical code chunks. 
+If you ever get lost, you can use the link provided with each section header (for example `## [Introduction](https://www.tidymodels.org/start/models/#intro)`) to visit the accompanying section of the online article.
 
-Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks. 
-
-Feel free to change the code, and explore the tidymodels functions and objects.
-
-Happy learning!
+Feel free to change the code, and explore the tidymodels functions and objects. Happy learning! 🤓
