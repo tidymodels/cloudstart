@@ -1,0 +1,188 @@
+---
+title: "Build a model"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(tibble.print_min = 5)
+```
+
+Get started with building a model in this R Markdown document that accompanies [Build a model](https://www.tidymodels.org/start/models/) tidymodels start article.
+
+If you ever get lost, you can click on the section headers to see the accompanying section in the online article.
+
+Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
+
+
+## [Introduction](https://www.tidymodels.org/start/models/#intro)
+
+Load necessary packages:
+
+```{r}
+library(tidymodels)  # for the parsnip package, along with the rest of tidymodels
+
+# Helper packages
+library(readr)       # for importing data
+```
+
+
+## [The Sea Urchins Data](https://www.tidymodels.org/start/models/#data)
+
+
+```{r}
+urchins <-
+  # Data were assembled for a tutorial 
+  # at https://www.flutterbys.com.au/stats/tut/tut7.5a.html
+  read_csv("https://tidymodels.org/start/models/urchins.csv") %>% 
+  # Change the names to be a little more verbose
+  setNames(c("food_regime", "initial_volume", "width")) %>% 
+  # Factors are very helpful for modeling, so we convert one column
+  mutate(food_regime = factor(food_regime, levels = c("Initial", "Low", "High")))
+```
+
+Look at the data:
+
+```{r}
+urchins
+```
+
+Plot the data: 
+
+```{r}
+ggplot(urchins,
+       aes(x = initial_volume, 
+           y = width, 
+           group = food_regime, 
+           col = food_regime)) + 
+  geom_point() + 
+  geom_smooth(method = lm, se = FALSE) +
+  scale_color_viridis_d(option = "plasma", end = .7)
+```
+
+## [Build and fit a model](https://www.tidymodels.org/start/models/#build-model)
+
+```{r}
+linear_reg() %>% 
+  set_engine("lm")
+
+```
+
+Try typing `?linear_reg()` in the console to see all available engines and other details about this model type.
+
+Create model specification:
+
+```{r}
+lm_mod <- 
+  linear_reg() %>% 
+  set_engine("lm")
+```
+
+Fit model:
+
+```{r}
+lm_fit <- 
+  lm_mod %>% 
+  fit(width ~ initial_volume * food_regime, data = urchins)
+lm_fit
+```
+
+Present model results in a tidyverse friendly way with `tidy()` from `broom` package.
+
+```{r}
+tidy(lm_fit)
+```
+
+## [Use a model to predict](https://www.tidymodels.org/start/models/#predict-model)
+
+New example data to predict:
+
+```{r}
+new_points <- expand.grid(initial_volume = 20, 
+                          food_regime = c("Initial", "Low", "High"))
+new_points
+```
+
+Generate the mean body width values: 
+
+```{r}
+mean_pred <- predict(lm_fit, new_data = new_points)
+mean_pred
+```
+
+Get confidence intervals and plot:
+
+```{r}
+conf_int_pred <- predict(lm_fit, 
+                         new_data = new_points, 
+                         type = "conf_int")
+conf_int_pred
+
+# Now combine: 
+plot_data <- 
+  new_points %>% 
+  bind_cols(mean_pred) %>% 
+  bind_cols(conf_int_pred)
+
+# and plot:
+ggplot(plot_data, aes(x = food_regime)) + 
+  geom_point(aes(y = .pred)) + 
+  geom_errorbar(aes(ymin = .pred_lower, 
+                    ymax = .pred_upper),
+                width = .2) + 
+  labs(y = "urchin size")
+```
+
+## [Model with a different engine](https://www.tidymodels.org/start/models/#new-engine)
+
+Switch to Bayesian approach by simply changing your engine to **stan**: 
+
+```{r}
+# set the prior distribution
+prior_dist <- rstanarm::student_t(df = 1)
+
+set.seed(123)
+
+# make the parsnip model
+bayes_mod <-   
+  linear_reg() %>% 
+  set_engine("stan", 
+             prior_intercept = prior_dist, 
+             prior = prior_dist) 
+
+# train the model
+bayes_fit <- 
+  bayes_mod %>% 
+  fit(width ~ initial_volume * food_regime, data = urchins)
+
+print(bayes_fit, digits = 5)
+```
+
+To update the parameter table, the `tidy()` method is once again used: 
+
+```{r}
+tidy(bayes_fit, intervals = TRUE)
+```
+
+Get your predictions without changing the syntax you used earlier:
+
+```{r}
+bayes_plot_data <- 
+  new_points %>% 
+  bind_cols(predict(bayes_fit, new_data = new_points)) %>% 
+  bind_cols(predict(bayes_fit, new_data = new_points, type = "conf_int"))
+
+ggplot(bayes_plot_data, aes(x = food_regime)) + 
+  geom_point(aes(y = .pred)) + 
+  geom_errorbar(aes(ymin = .pred_lower, ymax = .pred_upper), width = .2) + 
+  labs(y = "urchin size") + 
+  ggtitle("Bayesian model with t(1) prior distribution")
+```
+
+
+Think about how we are using the pipe (`%>%`):
+
++ Use the pipe to pass around the _data_ in the **tidyverse**   
++ Use the pipe to pass around the _model object_ with **tidymodels**

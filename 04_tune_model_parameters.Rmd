@@ -1,0 +1,243 @@
+---
+title: "Tune model parameters"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(tibble.print_min = 5)
+```
+
+Get started with building a model in this R Markdown document that accompanies [Tune model parameters](https://www.tidymodels.org/start/tuning/) tidymodels start article.
+
+If you ever get lost, you can click on the section headers to see the accompanying section in the online article.
+
+Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
+
+## [Introduction](https://www.tidymodels.org/start/tuning/#intro)
+
+Load necessary packages:
+
+```{r}
+library(tidymodels)  # for the tune package, along with the rest of tidymodels
+
+# Helper packages
+library(modeldata)   # for the cells data
+library(vip)         # for variable importance plots
+```
+
+## [The cell image data, revisited](https://www.tidymodels.org/start/tuning/#data)
+
+Let's revisit the `cells` dataset, which we also used in the previous article [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling).
+
+Import the same `cells` dataset:
+
+```{r}
+data(cells, package = "modeldata")
+cells
+```
+
+
+## [Predicting image segmentation, but better](https://www.tidymodels.org/start/tuning/#why-tune)
+
+We'll try to predict well-segmented (`WS`) or poorly segmented (`PS`) cells again. (See previous article [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling)).
+
+This time we'll use a different model and put a bit more effort into improving our model performance.
+
+Again we start by splitting the data:
+
+```{r}
+set.seed(123)
+cell_split <- initial_split(cells %>% select(-case), 
+                            strata = class)
+cell_train <- training(cell_split)
+cell_test  <- testing(cell_split)
+```
+
+## [Tuning hyperparameters](https://www.tidymodels.org/start/tuning/#tuning)
+
+Let's start by building our model specification with the `decision_tree()` model type, while setting the engine to `rpart` and mode to `classification`. See `?decision_tree()` for possible engines and further details.
+
+Notice how we define the decision tree hyperparameters `cost_complexity` and `tree_depth` using `tune()`. This way we are letting the model specification know that we would like to tune these hyperparameters in the next steps.
+
+```{r}
+tune_spec <- 
+  decision_tree(
+    cost_complexity = tune(),
+    tree_depth = tune()
+  ) %>% 
+  set_engine("rpart") %>% 
+  set_mode("classification")
+
+tune_spec
+```
+
+Let's also create a regular grid of values to be used during our tuning process. 
+This can be easily defined with `grid_regular()`, and helper parameter functions (`cost_complexity()` and `tree_depth()`), that return sensible values for the hyperparameters we would like to tune.
+
+```{r}
+tree_grid <- grid_regular(cost_complexity(),
+                          tree_depth(),
+                          levels = 5)
+tree_grid
+
+tree_grid %>% 
+  count(tree_depth)
+```
+
+See `?trees` for a list of parameter functions related to tree- and rule-based models.
+
+Let's create the folds we will use for tuning:
+
+```{r}
+set.seed(234)
+cell_folds <- vfold_cv(cell_train)
+```
+
+
+## [Model tuning with a grid](https://www.tidymodels.org/start/tuning/#tune-grid)
+
+
+Create a `workflow()` with our model specification `tune_spec` and add a straightforward formula. 
+
+```{r}
+set.seed(345)
+
+tree_wf <- workflow() %>%
+  add_model(tune_spec) %>%
+  add_formula(class ~ .)
+```
+
+Finally, let's put the pieces together.
+
+Apply our workflow and tuning grid across folds.
+
+```{r}
+tree_res <- 
+  tree_wf %>% 
+  tune_grid(
+    resamples = cell_folds,
+    grid = tree_grid
+    )
+
+tree_res
+```
+
+Recall how we collected model performance metrics in the previous article?
+Similarly we can collect and summarize them here with `collect_metrics()`.
+
+```{r}
+tree_res %>% 
+  collect_metrics()
+```
+
+Too many results to look at!
+It would be easier if we plotted them:
+
+```{r}
+tree_res %>%
+  collect_metrics() %>%
+  mutate(tree_depth = factor(tree_depth)) %>%
+  ggplot(aes(cost_complexity, mean, color = tree_depth)) +
+  geom_line(size = 1.5, alpha = 0.6) +
+  geom_point(size = 2) +
+  facet_wrap(~ .metric, scales = "free", nrow = 2) +
+  scale_x_log10(labels = scales::label_number()) +
+  scale_color_viridis_d(option = "plasma", begin = .9, end = 0)
+```
+
+The `show_best()` function shows us the top 5 candidate models by default:
+
+```{r}
+tree_res %>%
+  show_best("roc_auc")
+```
+
+See `?show_best()` for more details.
+
+Alternatively, we could use `select_best()` to simply pull out the best decision tree model:
+
+```{r}
+best_tree <- tree_res %>%
+  select_best("roc_auc")
+
+best_tree
+```
+
+## [Finalizing our model](https://www.tidymodels.org/start/tuning/#final-model)
+
+Finally we can go back and finalize our workflow!
+This updates the workflow object such that our model hyperparameters are set to the same values contained in `best_tree`.
+
+```{r}
+final_wf <- 
+  tree_wf %>% 
+  finalize_workflow(best_tree)
+
+final_wf
+```
+
+### Exploring results
+
+Let's fit this final model to the training data. 
+What does the decision tree look like?
+
+```{r final-tree, dependson="final-mod"}
+final_tree <- 
+  final_wf %>%
+  fit(data = cell_train) 
+
+final_tree
+```
+
+Extract the final model object from the workflow and use `vip()` from the **vip** package to visualize variable importance.
+
+```{r}
+library(vip)
+
+final_tree %>% 
+  pull_workflow_fit() %>% 
+  vip()
+```
+
+See `?vip::vip` for more details.
+
+### The last fit
+
+Finally, it's time to go back and see the performance of our model with the "untouched" test data.
+
+Use `last_fit()` to fit the finalized model on the full training data set and evaluate it on the test data.
+
+```{r}
+final_fit <- 
+  final_wf %>%
+  last_fit(cell_split) 
+```
+
+Collect performance metrics and plot ROC curve:
+
+```{r}
+final_fit %>%
+  collect_metrics()
+
+final_fit %>%
+  collect_predictions() %>% 
+  roc_curve(class, .pred_PS) %>% 
+  autoplot()
+```
+
+It looks like we did not overfit during our tuning procedure!
+
+## Your turn!
+
+You can see available parsnip object arguments with:
+
+```{r}
+args(decision_tree)
+```
+
+The `decision_tree()` function has _another_ hyperparameter `min_n` that can also be tuned.
+
+Now _you_ can try to tune another decision tree model with `min_n`!
