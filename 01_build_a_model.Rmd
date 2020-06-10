@@ -12,7 +12,7 @@ options(tibble.print_min = 5)
 
 Get started with building a model in this R Markdown document that accompanies [Build a model](https://www.tidymodels.org/start/models/) tidymodels start article.
 
-If you ever get lost, you can click on the header of the knitted document to see the accompanying section in the online article.
+If you ever get lost, you can click on the section headers to see the accompanying section in the online article.
 
 Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
 
