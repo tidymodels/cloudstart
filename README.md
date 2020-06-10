@@ -1,4 +1,5 @@
-# cloudstart: R Markdown documents for RStudio Cloud ☁ to accompany tidymodels articles
+# cloudstart
+## R Markdown documents for RStudio Cloud ☁ to accompany tidymodels articles
 
 This repository contains R Markdown documents to accompany the [Get Started](https://www.tidymodels.org/start/) articles on https://www.tidymodels.org/:
 
