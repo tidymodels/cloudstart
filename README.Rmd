@@ -7,15 +7,17 @@ output: github_document
 
 This repository contains R Markdown documents to accompany the [Get Started](https://www.tidymodels.org/start/) articles on https://www.tidymodels.org/. 
 
-The R Markdown documents in this repo are here to help you walk through these articles by running identical code chunks. Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute them. 
+The R Markdown documents in this repo are here to help you walk through these articles by running identical code chunks.
 
-## Get Started
+Feel free to change the code, and explore the tidymodels functions and objects.If you would like to keep the changes you've made, don't forget to click on "save a permanent copy! 
 
-Two options to get started:
+Happy learning! 🤓
+
+## Two options to get started:
 
 + You can start by clicking on the R Markdown file of your choice in the Files pane.
 
-+ For a more user friendly setup, press the play button at the top-right of the code chunk provided for each article: 
++ For a more user friendly setup, press the play button ("Run Current Chunk") at the top-right of the code chunk provided for each article: 
 
 1. [Build a model](https://www.tidymodels.org/start/models/):
 
@@ -61,8 +63,3 @@ viewer("https://www.tidymodels.org/start/case-study/",
        height = "maximize")
 rstudioapi::navigateToFile("05_case_study.Rmd")
 ```
-
-
-If you ever get lost, you can use the link provided with each section header (for example `## [Introduction](https://www.tidymodels.org/start/models/#intro)`) to visit the accompanying section of the online article.
-
-Feel free to change the code, and explore the tidymodels functions and objects. Happy learning! 🤓
