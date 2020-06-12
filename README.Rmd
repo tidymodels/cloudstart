@@ -9,7 +9,8 @@ This repository contains R Markdown documents to accompany the [Get Started](htt
 
 The R Markdown documents in this repo are here to help you walk through these articles by running identical code chunks.
 
-Feel free to change the code, and explore the tidymodels functions and objects.If you would like to keep the changes you've made, don't forget to click on "save a permanent copy! 
+Feel free to change the code, and explore the tidymodels functions and objects.
+If you would like to keep the changes you've made, don't forget to click on "save a permanent copy"! 
 
 Happy learning! 🤓
 
