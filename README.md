@@ -1,19 +1,19 @@
-# cloudstart: R Markdown documents for RStudio Cloud to accompany tidymodels articles
+# cloudstart
 
-This repository contains R Markdown documents to accompany the [Get Started](https://www.tidymodels.org/start/) articles on https://www.tidymodels.org/:
+## R Markdown documents for RStudio Cloud ☁️ to accompany tidymodels articles
 
-1. [Build a model](https://www.tidymodels.org/start/models/)
-2. [Preprocess your data with recipes](https://www.tidymodels.org/start/recipes)  
-3. [Evaluate your model with resampling](https://www.tidymodels.org/start/resampling)  
-4. [Tune model parameters](https://www.tidymodels.org/start/tuning/)   
-5. [A predictive modeling case study](https://www.tidymodels.org/start/case-study/)
+This repository contains R Markdown documents to accompany the five [Get Started](https://www.tidymodels.org/start/) articles on https://www.tidymodels.org/.
 
-If you ever get lost, you can go to the link provided with each section header (for example `## [Introduction](https://www.tidymodels.org/start/models/#intro)`) to see the accompanying section of the online article.
+You can open the R Markdown files by clicking on the file name in the Files pane on the right. 👉
 
-These R Markdown files are here to help you walktrhough the five _Get Started_ articles by running the identical code chunks. 
+1. Build a model: `01_build_a_model.Rmd`
+2. Preprocess your data with recipes: `02_preprocess_with_recipes.Rmd`  
+3. Evaluate your model with resampling: `03_evaluate_with_resampling.Rmd`
+4. Tune model parameters: `04_tune_model_parameters .Rmd`
+5. A predictive modeling case study: `05_case_study.Rmd`
 
-Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks. 
-
+These R Markdown documents are here to help you walk through the articles by running identical code chunks. 
 Feel free to change the code, and explore the tidymodels functions and objects.
+If you would like to keep the changes you've made, don't forget to click on "save a permanent copy" on top right! 
 
-Happy learning!
+Happy learning! 🤓
