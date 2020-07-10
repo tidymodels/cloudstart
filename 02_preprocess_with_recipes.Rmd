@@ -55,6 +55,19 @@ flight_data <-
   mutate_if(is.character, as.factor)
 ```
 
+Before moving forward, let's thin our data so we can run these analyses even with minimal (default) computational resources. By doing so we will avoid aborting our RStudio Cloud session.
+
+Let's sample 20% of the rows and assign it as our data:
+
+```{r}
+flight_data <- flight_data %>%
+  slice_sample(prop=0.2)
+
+nrow(flight_data)
+```
+
+Note that since we are using a subset of the original data set, the results you generate here will be slightly different than the *Preprocess your data with recipes* article.
+
 Check the number of delayed flights:
 
 ```{r}
@@ -62,6 +75,8 @@ flight_data %>%
   count(arr_delay) %>% 
   mutate(prop = n/sum(n))
 ```
+
+For example, the number of `late` and `on_time` flights you get here are less than the number of flights you see in the article. But proportions are very close, suggesting that our random sampling was indeed random and did not over or down-sampled a category vs the other.
 
 Take a look at data types and data points:
 
@@ -246,6 +261,8 @@ flights_pred <-
 flights_pred
 ```
 
+Note that the result you get here will be different than the online article since we only fitted the model to the subset of the actual data set.
+
 Let's look at model performance with ROC curve (`roc_curve()`) and plot by piping it to the `autoplot()`.
 
 ```{r}
@@ -261,7 +278,7 @@ flights_pred %>%
   roc_auc(truth = arr_delay, .pred_late)
 ```
 
-Not too bad! 
+Again, here we get a slightly lower ROC AUC value because we are using less data. But considering we're only using one fifth of the whole data set, a mere `0.006` decrease in ROC AUC is actually not bad!
 
 Now it's your turn to test out this workflow [*without*](https://tidymodels.github.io/workflows/reference/add_formula.html) this recipe! 
 
