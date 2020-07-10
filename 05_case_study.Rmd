@@ -33,18 +33,23 @@ library(vip)         # for variable importance plots
 
 ## [The Hotel Bookings Data](https://www.tidymodels.org/start/case-study/#data)
 
-Let's read our hotel data into R:
+Let's read the hotel data into R and randomly select 25% of the rows in the data set to avoid long computation times later on. 
 
 ```{r}
 hotels <- 
   read_csv('https://tidymodels.org/start/case-study/hotels.csv') %>%
-  mutate_if(is.character, as.factor) 
+  mutate_if(is.character, as.factor) %>%
+  # randomly select rows
+  slice_sample(prop=0.25)
+
 
 dim(hotels)
 glimpse(hotels)
 ```
 
 Let's look at proportions of hotel stays that include children and/or babies:
+
+Note that your results will slightly differ from the original article, since you are only using 25% of the data.
 
 ```{r}
 hotels %>% 
@@ -187,6 +192,8 @@ top_models
 
 Let's pick candidate model 12 with a penalty value of `0.00137`:
 
+Note that because your are using less data, your mean ROC AUC will be slightly less than what's shown in the article.
+
 ```{r}
 lr_best <- 
   lr_res %>% 
@@ -262,26 +269,31 @@ rf_mod %>%
   parameters()  
 ```
 
-We will use a space-filling design to tune, with 25 candidate models: 
+We will use a space-filling design to tune with 12 candidate models (instead of 25 to reduce computation time).    
 
 ```{r}
 set.seed(345)
+
 rf_res <- 
   rf_workflow %>% 
   tune_grid(val_set,
-            grid = 25,
+            grid = 12,
             control = control_grid(save_pred = TRUE),
             metrics = metric_set(roc_auc))
 ```
 
-Here are our top 5 random forest models, out of the 25 candidates:
+Be patient here, computing the results will take about ~2 minutes to complete if you are using the default RStudio Cloud resources (1 GB memory, 1 CPU).
+
+Here are our top 5 random forest models, out of the 12 candidates:
+
+Note that your results will be different and your accuracy will take a small hit since you are using less data (only 25% of the whole data set) and setting up a smaller grid to tune model hyperparameters. 
 
 ```{r}
 rf_res %>% 
   show_best(metric = "roc_auc")
 ```
 
-We're already getting much better results than our penalized logistic regression!
+But we're already getting much better results than our penalized logistic regression!
 
 Let's plot the results:
 
