@@ -33,14 +33,20 @@ library(vip)         # for variable importance plots
 
 ## [The Hotel Bookings Data](https://www.tidymodels.org/start/case-study/#data)
 
-Let's read the hotel data into R and randomly select 25% of the rows in the data set to avoid long computation times later on. 
+Let's read the hotel data into R and randomly select 30% of the rows in the data set to avoid long computation times later on. 
+
+Note that your results will differ from the original article, since you are only using 30% of the data.
 
 ```{r}
+# Fix the random numbers by setting the seed 
+# This enables the analysis to be reproducible when random numbers are used
+set.seed(123)
+
 hotels <- 
   read_csv('https://tidymodels.org/start/case-study/hotels.csv') %>%
   mutate_if(is.character, as.factor) %>%
   # randomly select rows
-  slice_sample(prop=0.25)
+  slice_sample(prop=0.30)
 
 
 dim(hotels)
@@ -48,8 +54,6 @@ glimpse(hotels)
 ```
 
 Let's look at proportions of hotel stays that include children and/or babies:
-
-Note that your results will slightly differ from the original article, since you are only using 25% of the data.
 
 ```{r}
 hotels %>% 
@@ -60,9 +64,9 @@ hotels %>%
 
 ## [A first model: penalized logistic regression](https://www.tidymodels.org/start/case-study/#first-model)
 
- Recall [Evaluate your model with resampling](/start/resampling/#data-split) article for data splitting?
+Do you recall [Evaluate your model with resampling](/start/resampling/#data-split) article for data splitting?
  
- Let's reserve 25% of the stays to the test set:
+Let's reserve 25% of the `hotels` data for the test set:
  
 ```{r}
 set.seed(123)
@@ -159,7 +163,7 @@ lr_res <-
   lr_workflow %>% 
   tune_grid(val_set,
             grid = lr_reg_grid,
-            control = control_grid(save_pred = TRUE),
+            control = control_grid(save_pred = TRUE, verbose = TRUE),
             metrics = metric_set(roc_auc))
 
 lr_res
@@ -271,18 +275,17 @@ rf_mod %>%
 
 We will use a space-filling design to tune with 12 candidate models (instead of 25 to reduce computation time).    
 
+Be patient here, computing these results will take several minutes to complete if you are using the default RStudio Cloud resources (1 GB memory, 1 CPU).
+
 ```{r}
 set.seed(345)
-
 rf_res <- 
   rf_workflow %>% 
   tune_grid(val_set,
             grid = 12,
-            control = control_grid(save_pred = TRUE),
+            control = control_grid(save_pred = TRUE, verbose = TRUE),
             metrics = metric_set(roc_auc))
 ```
-
-Be patient here, computing the results will take about ~2 minutes to complete if you are using the default RStudio Cloud resources (1 GB memory, 1 CPU).
 
 Here are our top 5 random forest models, out of the 12 candidates:
 

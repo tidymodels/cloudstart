@@ -32,8 +32,6 @@ library(skimr)           # for variable summaries
 Load and wrangle data:
 
 ```{r}
-set.seed(123)
-
 flight_data <- 
   flights %>% 
   mutate(
@@ -60,6 +58,10 @@ Before moving forward, let's thin our data so we can run these analyses even wit
 Let's sample 20% of the rows and assign it as our data:
 
 ```{r}
+# Fix the random numbers by setting the seed 
+# This enables the analysis to be reproducible when random numbers are used
+set.seed(3)
+
 flight_data <- flight_data %>%
   slice_sample(prop=0.2)
 
@@ -96,9 +98,6 @@ flight_data %>%
 Create training and test sets:
 
 ```{r}
-# Fix the random numbers by setting the seed 
-# This enables the analysis to be reproducible when random numbers are used 
-set.seed(555)
 # Put 3/4 of the data into the training set 
 data_split <- initial_split(flight_data, prop = 3/4)
 
@@ -227,6 +226,7 @@ flights_wflow
 ```
 
 Prepare the recipe and train the model:
+Be patient, this step will take a little time to compute.
 
 ```{r}
 flights_fit <- 
@@ -278,7 +278,7 @@ flights_pred %>%
   roc_auc(truth = arr_delay, .pred_late)
 ```
 
-Again, here we get a slightly lower ROC AUC value because we are using less data. But considering we're only using one fifth of the whole data set, a mere `0.006` decrease in ROC AUC is actually not bad!
+Good job!
 
 Now it's your turn to test out this workflow [*without*](https://tidymodels.github.io/workflows/reference/add_formula.html) this recipe! 
 
