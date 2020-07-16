@@ -112,14 +112,16 @@ tree_wf <- workflow() %>%
 
 Finally, let's put the pieces together.
 
-Apply our workflow and tuning grid across folds.
+Apply the workflow and tuning grid across folds:
 
+(Be patient, with RStudio Cloud Basic settings, this computation may take several minutes.)
 ```{r}
 tree_res <- 
   tree_wf %>% 
   tune_grid(
     resamples = cell_folds,
-    grid = tree_grid
+    grid = tree_grid,
+    control = control_grid(verbose = TRUE)
     )
 
 tree_res
