@@ -32,8 +32,6 @@ library(skimr)           # for variable summaries
 Load and wrangle data:
 
 ```{r}
-set.seed(123)
-
 flight_data <- 
   flights %>% 
   mutate(
@@ -55,6 +53,23 @@ flight_data <-
   mutate_if(is.character, as.factor)
 ```
 
+Before moving forward, let's reduce the size of our data so we can run these analyses with the default computational resources on RStudio Cloud. By doing so we will avoid aborting our session.
+
+Let's sample 20% of the rows and assign it as our data:
+
+```{r}
+# Fix the random numbers by setting the seed 
+# This enables the analysis to be reproducible when random numbers are used
+set.seed(3)
+
+flight_data <- flight_data %>%
+  slice_sample(prop = 0.2)
+
+nrow(flight_data)
+```
+
+Note that since we are using a subset of the original data set, the results you generate here will be slightly different than the *Preprocess your data with recipes* article.
+
 Check the number of delayed flights:
 
 ```{r}
@@ -62,6 +77,8 @@ flight_data %>%
   count(arr_delay) %>% 
   mutate(prop = n/sum(n))
 ```
+
+For example, the number of `late` and `on_time` flights you get here are less than the number of flights you see in the article. The proportions are very close, though, suggesting that our random sampling was indeed random and did not over- or under-sample one category vs. the other.
 
 Take a look at data types and data points:
 
@@ -81,9 +98,6 @@ flight_data %>%
 Create training and test sets:
 
 ```{r}
-# Fix the random numbers by setting the seed 
-# This enables the analysis to be reproducible when random numbers are used 
-set.seed(555)
 # Put 3/4 of the data into the training set 
 data_split <- initial_split(flight_data, prop = 3/4)
 
@@ -213,6 +227,8 @@ flights_wflow
 
 Prepare the recipe and train the model:
 
+Be patient; this step will take a little time to compute.
+
 ```{r}
 flights_fit <- 
   flights_wflow %>% 
@@ -246,6 +262,8 @@ flights_pred <-
 flights_pred
 ```
 
+Note that the result you get here will be different than the online article since we only fitted the model to the subset of the actual data set.
+
 Let's look at model performance with ROC curve (`roc_curve()`) and plot by piping it to the `autoplot()`.
 
 ```{r}
@@ -261,7 +279,7 @@ flights_pred %>%
   roc_auc(truth = arr_delay, .pred_late)
 ```
 
-Not too bad! 
+Good job!
 
 Now it's your turn to test out this workflow [*without*](https://tidymodels.github.io/workflows/reference/add_formula.html) this recipe! 
 

@@ -168,11 +168,13 @@ rf_wf <-
 
 Now apply the workflow and fit the model with each fold:
 
+(This computation will take a bit, so be patient.)
 ```{r}
 set.seed(456)
 rf_fit_rs <- 
   rf_wf %>% 
-  fit_resamples(folds)
+  fit_resamples(folds,
+                control = control_resamples(verbose = TRUE))
 
 rf_fit_rs
 ```

@@ -33,12 +33,21 @@ library(vip)         # for variable importance plots
 
 ## [The Hotel Bookings Data](https://www.tidymodels.org/start/case-study/#data)
 
-Let's read our hotel data into R:
+Let's read the hotel data into R and randomly select 30% of the rows in the data set to avoid long computation times later on. 
+
+Note that your results will differ from the original article, since you are only using 30% of the data.
 
 ```{r}
+# Fix the random numbers by setting the seed 
+# This enables the analysis to be reproducible when random numbers are used
+set.seed(123)
+
 hotels <- 
   read_csv('https://tidymodels.org/start/case-study/hotels.csv') %>%
-  mutate_if(is.character, as.factor) 
+  mutate_if(is.character, as.factor) %>%
+  # randomly select rows
+  slice_sample(prop = 0.30)
+
 
 dim(hotels)
 glimpse(hotels)
@@ -55,9 +64,9 @@ hotels %>%
 
 ## [A first model: penalized logistic regression](https://www.tidymodels.org/start/case-study/#first-model)
 
- Recall [Evaluate your model with resampling](/start/resampling/#data-split) article for data splitting?
+Do you recall [Evaluate your model with resampling](/start/resampling/#data-split) article for data splitting?
  
- Let's reserve 25% of the stays to the test set:
+Let's reserve 25% of the `hotels` data for the test set:
  
 ```{r}
 set.seed(123)
@@ -154,7 +163,7 @@ lr_res <-
   lr_workflow %>% 
   tune_grid(val_set,
             grid = lr_reg_grid,
-            control = control_grid(save_pred = TRUE),
+            control = control_grid(save_pred = TRUE, verbose = TRUE),
             metrics = metric_set(roc_auc))
 
 lr_res
@@ -186,6 +195,8 @@ top_models
 ```
 
 Let's pick candidate model 12 with a penalty value of `0.00137`:
+
+Note that because you are using less data, your mean ROC AUC will be slightly lower than what's shown in the article.
 
 ```{r}
 lr_best <- 
@@ -262,26 +273,30 @@ rf_mod %>%
   parameters()  
 ```
 
-We will use a space-filling design to tune, with 25 candidate models: 
+We will use a space-filling design to tune with 12 candidate models (instead of 25, to reduce computation time).    
+
+Be patient here! Computing these results will take several minutes to complete if you are using the default RStudio Cloud resources (1 GB memory, 1 CPU).
 
 ```{r}
 set.seed(345)
 rf_res <- 
   rf_workflow %>% 
   tune_grid(val_set,
-            grid = 25,
-            control = control_grid(save_pred = TRUE),
+            grid = 12,
+            control = control_grid(save_pred = TRUE, verbose = TRUE),
             metrics = metric_set(roc_auc))
 ```
 
-Here are our top 5 random forest models, out of the 25 candidates:
+Here are our top 5 random forest models, out of the 12 candidates:
+
+Note that your results will be different and your accuracy will take a small hit since you are using less data (only 25% of the whole data set) and setting up a smaller grid to tune model hyperparameters. 
 
 ```{r}
 rf_res %>% 
   show_best(metric = "roc_auc")
 ```
 
-We're already getting much better results than our penalized logistic regression!
+But we're already getting much better results than our penalized logistic regression!
 
 Let's plot the results:
 
