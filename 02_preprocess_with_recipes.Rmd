@@ -63,7 +63,7 @@ Let's sample 20% of the rows and assign it as our data:
 set.seed(3)
 
 flight_data <- flight_data %>%
-  slice_sample(prop=0.2)
+  slice_sample(prop = 0.2)
 
 nrow(flight_data)
 ```
