@@ -273,7 +273,7 @@ rf_mod %>%
   parameters()  
 ```
 
-We will use a space-filling design to tune with 12 candidate models (instead of 25 to reduce computation time).    
+We will use a space-filling design to tune with 12 candidate models (instead of 25, to reduce computation time).    
 
 Be patient here! Computing these results will take several minutes to complete if you are using the default RStudio Cloud resources (1 GB memory, 1 CPU).
 
