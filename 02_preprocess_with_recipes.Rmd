@@ -53,7 +53,7 @@ flight_data <-
   mutate_if(is.character, as.factor)
 ```
 
-Before moving forward, let's thin our data so we can run these analyses even with minimal (default) computational resources. By doing so we will avoid aborting our RStudio Cloud session.
+Before moving forward, let's reduce the size of our data so we can run these analyses with the default computational resources on RStudio Cloud. By doing so we will avoid aborting our session.
 
 Let's sample 20% of the rows and assign it as our data:
 
