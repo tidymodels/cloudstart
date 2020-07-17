@@ -167,7 +167,8 @@ rf_wf <-
 ```
 
 Now apply the workflow and fit the model with each fold:
-(Computation will take a bit, be patient.)
+
+(This computation will take a bit, so be patient.)
 ```{r}
 set.seed(456)
 rf_fit_rs <- 
