@@ -46,7 +46,7 @@ hotels <-
   read_csv('https://tidymodels.org/start/case-study/hotels.csv') %>%
   mutate_if(is.character, as.factor) %>%
   # randomly select rows
-  slice_sample(prop=0.30)
+  slice_sample(prop = 0.30)
 
 
 dim(hotels)
