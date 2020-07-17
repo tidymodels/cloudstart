@@ -114,7 +114,7 @@ Finally, let's put the pieces together.
 
 Apply the workflow and tuning grid across folds:
 
-(Be patient, with RStudio Cloud Basic settings, this computation may take several minutes.)
+(Be patient; with RStudio Cloud Basic settings, this computation may take several minutes.)
 ```{r}
 tree_res <- 
   tree_wf %>% 
