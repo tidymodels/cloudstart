@@ -78,7 +78,7 @@ flight_data %>%
   mutate(prop = n/sum(n))
 ```
 
-For example, the number of `late` and `on_time` flights you get here are less than the number of flights you see in the article. But proportions are very close, suggesting that our random sampling was indeed random and did not over or down-sampled a category vs the other.
+For example, the number of `late` and `on_time` flights you get here are less than the number of flights you see in the article. The proportions are very close, though, suggesting that our random sampling was indeed random and did not over- or under-sample one category vs. the other.
 
 Take a look at data types and data points:
 
