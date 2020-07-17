@@ -226,7 +226,8 @@ flights_wflow
 ```
 
 Prepare the recipe and train the model:
-Be patient, this step will take a little time to compute.
+
+Be patient; this step will take a little time to compute.
 
 ```{r}
 flights_fit <- 
