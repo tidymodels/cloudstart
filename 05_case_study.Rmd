@@ -196,7 +196,7 @@ top_models
 
 Let's pick candidate model 12 with a penalty value of `0.00137`:
 
-Note that because your are using less data, your mean ROC AUC will be slightly less than what's shown in the article.
+Note that because you are using less data, your mean ROC AUC will be slightly lower than what's shown in the article.
 
 ```{r}
 lr_best <- 
