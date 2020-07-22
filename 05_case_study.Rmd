@@ -14,7 +14,7 @@ Get started with building a model in this R Markdown document that accompanies [
 
 If you ever get lost, you can visit the links provided next to section headers to see the accompanying section in the online article.
 
-Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks.
+Take advantage of the RStudio IDE and use "Run All Chunks Above" or "Run Current Chunk" buttons to easily execute code chunks. If you have been running other tidymodels articles in this project, restart R before working on this article so you don't run out of memory on RStudio Cloud.
 
 
 ## [Introduction](https://www.tidymodels.org/start/models/#intro)
